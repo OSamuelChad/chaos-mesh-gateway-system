@@ -1,0 +1,63 @@
+name: chaos-mesh-gateway
+
+services:
+  service-payment:
+    build: ./service-payment
+    environment:
+      PORT: "8081"
+    expose:
+      - "8081"
+    networks:
+      - mesh-network
+    restart: unless-stopped
+
+  service-resilience:
+    build: ./service-resilience
+    environment:
+      PORT: "8082"
+      PAYMENT_URL: http://service-payment:8081
+    expose:
+      - "8082"
+    depends_on:
+      service-payment:
+        condition: service_healthy
+    networks:
+      - mesh-network
+    restart: unless-stopped
+
+  api-gateway:
+    build: ./api-gateway
+    environment:
+      PORT: "8080"
+      PAYMENT_URL: http://service-payment:8081
+      RESILIENCE_URL: http://service-resilience:8082
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+      # Opcional: defina no .env ou no shell. Sem valor, o gateway gera um segredo aleatório.
+      JWT_SECRET: ${JWT_SECRET:-}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-password}
+    ports:
+      - "8080:8080"
+    depends_on:
+      service-payment:
+        condition: service_healthy
+      service-resilience:
+        condition: service_healthy
+    networks:
+      - mesh-network
+    restart: unless-stopped
+
+  web-client:
+    build: ./web-client
+    ports:
+      - "3000:3000"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - mesh-network
+    restart: unless-stopped
+
+networks:
+  mesh-network:
+    driver: bridge

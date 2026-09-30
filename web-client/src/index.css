@@ -1,0 +1,75 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  --color-ink-950: #07090c;
+  --color-ink-900: #0b0f14;
+  --color-ink-850: #10151c;
+  --color-ink-800: #151b24;
+  --color-ink-700: #1f2733;
+  --color-ink-600: #2b3542;
+  --color-ink-400: #6b7788;
+  --color-ink-300: #97a3b4;
+  --color-ink-100: #e6ebf2;
+
+  --color-healthy: #34d399;
+  --color-degraded: #fbbf24;
+  --color-critical: #fb7185;
+  --color-signal: #7dd3fc;
+
+  --animate-pulse-ring: pulse-ring 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.55; }
+    100% { transform: scale(1.12); opacity: 0; }
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-ink-950);
+  color: var(--color-ink-100);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Grade de fundo sutil do "control room" */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Ajustes do React Flow para o tema escuro */
+.react-flow {
+  --xy-background-color: transparent;
+  --xy-controls-button-background-color: var(--color-ink-800);
+  --xy-controls-button-background-color-hover: var(--color-ink-700);
+  --xy-controls-button-color: var(--color-ink-100);
+  --xy-controls-button-border-color: var(--color-ink-700);
+  --xy-edge-label-background-color: var(--color-ink-900);
+  --xy-edge-label-color: var(--color-ink-300);
+}
+
+.react-flow__attribution {
+  background: transparent !important;
+  opacity: 0.35;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

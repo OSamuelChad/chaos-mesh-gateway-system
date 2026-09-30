@@ -1,0 +1,675 @@
+basePath: /
+definitions:
+  handlers.BreakerConfig:
+    properties:
+      failure_ratio_threshold:
+        type: number
+      half_open_max_requests:
+        type: integer
+      interval_seconds:
+        type: number
+      min_requests:
+        type: integer
+      open_timeout_seconds:
+        type: number
+      request_timeout_seconds:
+        type: number
+    type: object
+  handlers.BreakerMetrics:
+    properties:
+      avg_upstream_latency_ms:
+        type: number
+      failures:
+        type: integer
+      rejected_by_breaker:
+        type: integer
+      state_changes:
+        type: integer
+      successes:
+        type: integer
+      total_calls:
+        type: integer
+    type: object
+  handlers.BreakerTransition:
+    properties:
+      at:
+        type: string
+      from:
+        type: string
+      to:
+        type: string
+    type: object
+  handlers.BreakerWindow:
+    properties:
+      consecutive_failures:
+        type: integer
+      consecutive_successes:
+        type: integer
+      failure_ratio:
+        type: number
+      requests:
+        type: integer
+      total_failures:
+        type: integer
+      total_successes:
+        type: integer
+    type: object
+  handlers.FaultsRequest:
+    properties:
+      rate:
+        example: 80
+        type: integer
+    type: object
+  handlers.GatewayInfo:
+    properties:
+      authenticated_as:
+        example: admin
+        type: string
+      uptime_seconds:
+        type: number
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+  handlers.LatencyRequest:
+    properties:
+      latency_ms:
+        example: 2000
+        type: integer
+    type: object
+  handlers.LoginRequest:
+    properties:
+      password:
+        example: password
+        type: string
+      username:
+        example: admin
+        type: string
+    type: object
+  handlers.LoginResponse:
+    properties:
+      _links:
+        $ref: '#/definitions/hateoas.Links'
+      access_token:
+        type: string
+      expires_at:
+        type: string
+      expires_in:
+        example: 3600
+        type: integer
+      token_type:
+        example: Bearer
+        type: string
+    type: object
+  handlers.Metric:
+    properties:
+      label:
+        example: Latência
+        type: string
+      value:
+        example: 0 ms
+        type: string
+    type: object
+  handlers.NodeResponse:
+    properties:
+      _links:
+        $ref: '#/definitions/hateoas.Links'
+      error:
+        type: string
+      gateway:
+        $ref: '#/definitions/handlers.GatewayInfo'
+      health:
+        allOf:
+        - $ref: '#/definitions/hateoas.Health'
+        example: HEALTHY
+      id:
+        example: payment
+        type: string
+      name:
+        example: Payment Service
+        type: string
+      payment:
+        $ref: '#/definitions/handlers.PaymentStatus'
+      reachable:
+        type: boolean
+      resilience:
+        $ref: '#/definitions/handlers.ResilienceStatus'
+      summary:
+        items:
+          $ref: '#/definitions/handlers.Metric'
+        type: array
+    type: object
+  handlers.PaymentResult:
+    properties:
+      _links:
+        $ref: '#/definitions/hateoas.Links'
+      fallback:
+        type: boolean
+      result:
+        type: object
+      status_code:
+        example: 201
+        type: integer
+    type: object
+  handlers.PaymentStatus:
+    properties:
+      chaos_active:
+        type: boolean
+      delayed_requests:
+        type: integer
+      fault_rate:
+        example: 0
+        type: integer
+      health:
+        example: HEALTHY
+        type: string
+      injected_faults:
+        type: integer
+      latency_ms:
+        example: 0
+        type: integer
+      total_requests:
+        type: integer
+    type: object
+  handlers.ResilienceStatus:
+    properties:
+      config:
+        $ref: '#/definitions/handlers.BreakerConfig'
+      last_transition:
+        $ref: '#/definitions/handlers.BreakerTransition'
+      metrics:
+        $ref: '#/definitions/handlers.BreakerMetrics'
+      state:
+        example: CLOSED
+        type: string
+      window:
+        $ref: '#/definitions/handlers.BreakerWindow'
+    type: object
+  handlers.RootResponse:
+    properties:
+      _links:
+        $ref: '#/definitions/hateoas.Links'
+      service:
+        example: api-gateway
+        type: string
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+  handlers.TopologyEdge:
+    properties:
+      animated:
+        type: boolean
+      health:
+        allOf:
+        - $ref: '#/definitions/hateoas.Health'
+        example: HEALTHY
+      id:
+        example: gateway-resilience
+        type: string
+      label:
+        example: HTTP
+        type: string
+      source:
+        example: gateway
+        type: string
+      target:
+        example: resilience
+        type: string
+    type: object
+  handlers.TopologyNode:
+    properties:
+      _links:
+        $ref: '#/definitions/hateoas.Links'
+      health:
+        allOf:
+        - $ref: '#/definitions/hateoas.Health'
+        example: HEALTHY
+      id:
+        example: gateway
+        type: string
+      label:
+        example: API Gateway
+        type: string
+      reachable:
+        type: boolean
+      role:
+        example: Entrada · JWT · HATEOAS
+        type: string
+      summary:
+        items:
+          $ref: '#/definitions/handlers.Metric'
+        type: array
+    type: object
+  handlers.TopologyResponse:
+    properties:
+      _links:
+        $ref: '#/definitions/hateoas.Links'
+      breaker_state:
+        example: CLOSED
+        type: string
+      edges:
+        items:
+          $ref: '#/definitions/handlers.TopologyEdge'
+        type: array
+      nodes:
+        items:
+          $ref: '#/definitions/handlers.TopologyNode'
+        type: array
+      timestamp:
+        type: string
+    type: object
+  handlers.TrafficRequest:
+    properties:
+      concurrency:
+        example: 4
+        type: integer
+      requests:
+        example: 20
+        type: integer
+    type: object
+  handlers.TrafficResponse:
+    properties:
+      _links:
+        $ref: '#/definitions/hateoas.Links'
+      avg_latency_ms:
+        type: number
+      breaker_state_after:
+        example: OPEN
+        type: string
+      breaker_state_before:
+        example: CLOSED
+        type: string
+      duration_ms:
+        type: integer
+      failed:
+        type: integer
+      fallbacks:
+        type: integer
+      requested:
+        type: integer
+      status_codes:
+        additionalProperties:
+          type: integer
+        type: object
+      succeeded:
+        type: integer
+    type: object
+  hateoas.ErrorResponse:
+    properties:
+      _links:
+        $ref: '#/definitions/hateoas.Links'
+      error:
+        example: token ausente ou inválido
+        type: string
+      status:
+        example: 401
+        type: integer
+    type: object
+  hateoas.Health:
+    enum:
+    - HEALTHY
+    - DEGRADED
+    - CRITICAL
+    type: string
+    x-enum-varnames:
+    - Healthy
+    - Degraded
+    - Critical
+  hateoas.Link:
+    properties:
+      body:
+        description: Body é o payload sugerido para a ação (POST/PUT).
+        type: object
+      href:
+        example: /api/v1/services/payment
+        type: string
+      method:
+        example: GET
+        type: string
+      title:
+        example: Atualizar status
+        type: string
+      type:
+        description: 'Type indica o media type quando o recurso não é JSON (ex.: text/html).'
+        type: string
+    type: object
+  hateoas.Links:
+    additionalProperties:
+      $ref: '#/definitions/hateoas.Link'
+    type: object
+info:
+  contact: {}
+  description: Gateway da malha de resiliência. Todas as respostas trazem "_links"
+    (HATEOAS) calculados a partir da saúde dos serviços e do estado do Circuit Breaker.
+  title: Chaos Mesh Gateway API
+  version: "1.0"
+paths:
+  /api/v1:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RootResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Índice da API
+      tags:
+      - mesh
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Troca usuário e senha por um token JWT (HS256) válido por 1 hora.
+      parameters:
+      - description: Credenciais
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+      summary: Autenticar
+      tags:
+      - auth
+  /api/v1/mesh/topology:
+    get:
+      description: Agrega o estado do Payment e do Resilience Service e devolve nós,
+        arestas e links.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.TopologyResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Topologia da malha
+      tags:
+      - mesh
+  /api/v1/payments:
+    post:
+      consumes:
+      - application/json
+      description: Encaminha a cobrança ao Resilience Service, que a envia ao Payment
+        Service através do Circuit Breaker. Com o breaker OPEN retorna 503 com payload
+        de fallback.
+      parameters:
+      - description: Cobrança
+        in: body
+        name: payment
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.PaymentResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.PaymentResult'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/handlers.PaymentResult'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/handlers.PaymentResult'
+      security:
+      - BearerAuth: []
+      summary: Processar cobrança
+      tags:
+      - payments
+  /api/v1/services/gateway:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.NodeResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Detalhe do API Gateway
+      tags:
+      - services
+  /api/v1/services/payment:
+    get:
+      description: Os links retornados variam com o caos ativo e com o estado do Circuit
+        Breaker.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.NodeResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Detalhe do Payment Service
+      tags:
+      - services
+  /api/v1/services/payment/chaos/faults:
+    put:
+      consumes:
+      - application/json
+      description: Define a porcentagem (0-100) de requisições que falharão com HTTP
+        500.
+      parameters:
+      - description: Taxa de erros (%)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.FaultsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.NodeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Injetar taxa de erros no Payment Service
+      tags:
+      - chaos
+  /api/v1/services/payment/chaos/latency:
+    put:
+      consumes:
+      - application/json
+      description: Define a latência artificial (0-10000 ms) aplicada pelo middleware
+        de caos.
+      parameters:
+      - description: Latência em ms
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LatencyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.NodeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Injetar latência no Payment Service
+      tags:
+      - chaos
+  /api/v1/services/payment/chaos/reset:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.NodeResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Restaurar o Payment Service
+      tags:
+      - chaos
+  /api/v1/services/resilience:
+    get:
+      description: Estado do Circuit Breaker (CLOSED, OPEN, HALF-OPEN) e métricas.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.NodeResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Detalhe do Resilience Service
+      tags:
+      - services
+  /api/v1/services/resilience/breaker/reset:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.NodeResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Fechar o Circuit Breaker
+      tags:
+      - chaos
+  /api/v1/traffic/simulate:
+    post:
+      consumes:
+      - application/json
+      description: Dispara N cobranças (1-100) pelo fluxo Gateway → Resilience → Payment
+        e resume o resultado.
+      parameters:
+      - description: Quantidade e concorrência
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/handlers.TrafficRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.TrafficResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/hateoas.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Simular tráfego
+      tags:
+      - traffic
+securityDefinitions:
+  BearerAuth:
+    description: Informe "Bearer {token}" obtido em /api/v1/auth/login.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

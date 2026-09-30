@@ -1,0 +1,1029 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Gateway da malha de resiliência. Todas as respostas trazem \"_links\" (HATEOAS) calculados a partir da saúde dos serviços e do estado do Circuit Breaker.",
+        "title": "Chaos Mesh Gateway API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/api/v1": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mesh"
+                ],
+                "summary": "Índice da API",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RootResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "description": "Troca usuário e senha por um token JWT (HS256) válido por 1 hora.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Autenticar",
+                "parameters": [
+                    {
+                        "description": "Credenciais",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mesh/topology": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Agrega o estado do Payment e do Resilience Service e devolve nós, arestas e links.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mesh"
+                ],
+                "summary": "Topologia da malha",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.TopologyResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/payments": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Encaminha a cobrança ao Resilience Service, que a envia ao Payment Service através do Circuit Breaker. Com o breaker OPEN retorna 503 com payload de fallback.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Processar cobrança",
+                "parameters": [
+                    {
+                        "description": "Cobrança",
+                        "name": "payment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PaymentResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PaymentResult"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PaymentResult"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PaymentResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/services/gateway": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Detalhe do API Gateway",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.NodeResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/services/payment": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Os links retornados variam com o caos ativo e com o estado do Circuit Breaker.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Detalhe do Payment Service",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.NodeResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/services/payment/chaos/faults": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Define a porcentagem (0-100) de requisições que falharão com HTTP 500.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chaos"
+                ],
+                "summary": "Injetar taxa de erros no Payment Service",
+                "parameters": [
+                    {
+                        "description": "Taxa de erros (%)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.FaultsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.NodeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/services/payment/chaos/latency": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Define a latência artificial (0-10000 ms) aplicada pelo middleware de caos.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chaos"
+                ],
+                "summary": "Injetar latência no Payment Service",
+                "parameters": [
+                    {
+                        "description": "Latência em ms",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LatencyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.NodeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/services/payment/chaos/reset": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chaos"
+                ],
+                "summary": "Restaurar o Payment Service",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.NodeResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/services/resilience": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Estado do Circuit Breaker (CLOSED, OPEN, HALF-OPEN) e métricas.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Detalhe do Resilience Service",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.NodeResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/services/resilience/breaker/reset": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chaos"
+                ],
+                "summary": "Fechar o Circuit Breaker",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.NodeResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/traffic/simulate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Dispara N cobranças (1-100) pelo fluxo Gateway → Resilience → Payment e resume o resultado.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "traffic"
+                ],
+                "summary": "Simular tráfego",
+                "parameters": [
+                    {
+                        "description": "Quantidade e concorrência",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.TrafficRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.TrafficResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/hateoas.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handlers.BreakerConfig": {
+            "type": "object",
+            "properties": {
+                "failure_ratio_threshold": {
+                    "type": "number"
+                },
+                "half_open_max_requests": {
+                    "type": "integer"
+                },
+                "interval_seconds": {
+                    "type": "number"
+                },
+                "min_requests": {
+                    "type": "integer"
+                },
+                "open_timeout_seconds": {
+                    "type": "number"
+                },
+                "request_timeout_seconds": {
+                    "type": "number"
+                }
+            }
+        },
+        "handlers.BreakerMetrics": {
+            "type": "object",
+            "properties": {
+                "avg_upstream_latency_ms": {
+                    "type": "number"
+                },
+                "failures": {
+                    "type": "integer"
+                },
+                "rejected_by_breaker": {
+                    "type": "integer"
+                },
+                "state_changes": {
+                    "type": "integer"
+                },
+                "successes": {
+                    "type": "integer"
+                },
+                "total_calls": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.BreakerTransition": {
+            "type": "object",
+            "properties": {
+                "at": {
+                    "type": "string"
+                },
+                "from": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.BreakerWindow": {
+            "type": "object",
+            "properties": {
+                "consecutive_failures": {
+                    "type": "integer"
+                },
+                "consecutive_successes": {
+                    "type": "integer"
+                },
+                "failure_ratio": {
+                    "type": "number"
+                },
+                "requests": {
+                    "type": "integer"
+                },
+                "total_failures": {
+                    "type": "integer"
+                },
+                "total_successes": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.FaultsRequest": {
+            "type": "object",
+            "properties": {
+                "rate": {
+                    "type": "integer",
+                    "example": 80
+                }
+            }
+        },
+        "handlers.GatewayInfo": {
+            "type": "object",
+            "properties": {
+                "authenticated_as": {
+                    "type": "string",
+                    "example": "admin"
+                },
+                "uptime_seconds": {
+                    "type": "number"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        },
+        "handlers.LatencyRequest": {
+            "type": "object",
+            "properties": {
+                "latency_ms": {
+                    "type": "integer",
+                    "example": 2000
+                }
+            }
+        },
+        "handlers.LoginRequest": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "admin"
+                }
+            }
+        },
+        "handlers.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/hateoas.Links"
+                },
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "type": "integer",
+                    "example": 3600
+                },
+                "token_type": {
+                    "type": "string",
+                    "example": "Bearer"
+                }
+            }
+        },
+        "handlers.Metric": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string",
+                    "example": "Latência"
+                },
+                "value": {
+                    "type": "string",
+                    "example": "0 ms"
+                }
+            }
+        },
+        "handlers.NodeResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/hateoas.Links"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "gateway": {
+                    "$ref": "#/definitions/handlers.GatewayInfo"
+                },
+                "health": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/hateoas.Health"
+                        }
+                    ],
+                    "example": "HEALTHY"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "payment"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Payment Service"
+                },
+                "payment": {
+                    "$ref": "#/definitions/handlers.PaymentStatus"
+                },
+                "reachable": {
+                    "type": "boolean"
+                },
+                "resilience": {
+                    "$ref": "#/definitions/handlers.ResilienceStatus"
+                },
+                "summary": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Metric"
+                    }
+                }
+            }
+        },
+        "handlers.PaymentResult": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/hateoas.Links"
+                },
+                "fallback": {
+                    "type": "boolean"
+                },
+                "result": {
+                    "type": "object"
+                },
+                "status_code": {
+                    "type": "integer",
+                    "example": 201
+                }
+            }
+        },
+        "handlers.PaymentStatus": {
+            "type": "object",
+            "properties": {
+                "chaos_active": {
+                    "type": "boolean"
+                },
+                "delayed_requests": {
+                    "type": "integer"
+                },
+                "fault_rate": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "health": {
+                    "type": "string",
+                    "example": "HEALTHY"
+                },
+                "injected_faults": {
+                    "type": "integer"
+                },
+                "latency_ms": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "total_requests": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.ResilienceStatus": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "$ref": "#/definitions/handlers.BreakerConfig"
+                },
+                "last_transition": {
+                    "$ref": "#/definitions/handlers.BreakerTransition"
+                },
+                "metrics": {
+                    "$ref": "#/definitions/handlers.BreakerMetrics"
+                },
+                "state": {
+                    "type": "string",
+                    "example": "CLOSED"
+                },
+                "window": {
+                    "$ref": "#/definitions/handlers.BreakerWindow"
+                }
+            }
+        },
+        "handlers.RootResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/hateoas.Links"
+                },
+                "service": {
+                    "type": "string",
+                    "example": "api-gateway"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        },
+        "handlers.TopologyEdge": {
+            "type": "object",
+            "properties": {
+                "animated": {
+                    "type": "boolean"
+                },
+                "health": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/hateoas.Health"
+                        }
+                    ],
+                    "example": "HEALTHY"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "gateway-resilience"
+                },
+                "label": {
+                    "type": "string",
+                    "example": "HTTP"
+                },
+                "source": {
+                    "type": "string",
+                    "example": "gateway"
+                },
+                "target": {
+                    "type": "string",
+                    "example": "resilience"
+                }
+            }
+        },
+        "handlers.TopologyNode": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/hateoas.Links"
+                },
+                "health": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/hateoas.Health"
+                        }
+                    ],
+                    "example": "HEALTHY"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "gateway"
+                },
+                "label": {
+                    "type": "string",
+                    "example": "API Gateway"
+                },
+                "reachable": {
+                    "type": "boolean"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "Entrada · JWT · HATEOAS"
+                },
+                "summary": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Metric"
+                    }
+                }
+            }
+        },
+        "handlers.TopologyResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/hateoas.Links"
+                },
+                "breaker_state": {
+                    "type": "string",
+                    "example": "CLOSED"
+                },
+                "edges": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.TopologyEdge"
+                    }
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.TopologyNode"
+                    }
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.TrafficRequest": {
+            "type": "object",
+            "properties": {
+                "concurrency": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "requests": {
+                    "type": "integer",
+                    "example": 20
+                }
+            }
+        },
+        "handlers.TrafficResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/hateoas.Links"
+                },
+                "avg_latency_ms": {
+                    "type": "number"
+                },
+                "breaker_state_after": {
+                    "type": "string",
+                    "example": "OPEN"
+                },
+                "breaker_state_before": {
+                    "type": "string",
+                    "example": "CLOSED"
+                },
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "failed": {
+                    "type": "integer"
+                },
+                "fallbacks": {
+                    "type": "integer"
+                },
+                "requested": {
+                    "type": "integer"
+                },
+                "status_codes": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "succeeded": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hateoas.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/hateoas.Links"
+                },
+                "error": {
+                    "type": "string",
+                    "example": "token ausente ou inválido"
+                },
+                "status": {
+                    "type": "integer",
+                    "example": 401
+                }
+            }
+        },
+        "hateoas.Health": {
+            "type": "string",
+            "enum": [
+                "HEALTHY",
+                "DEGRADED",
+                "CRITICAL"
+            ],
+            "x-enum-varnames": [
+                "Healthy",
+                "Degraded",
+                "Critical"
+            ]
+        },
+        "hateoas.Link": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "description": "Body é o payload sugerido para a ação (POST/PUT).",
+                    "type": "object"
+                },
+                "href": {
+                    "type": "string",
+                    "example": "/api/v1/services/payment"
+                },
+                "method": {
+                    "type": "string",
+                    "example": "GET"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Atualizar status"
+                },
+                "type": {
+                    "description": "Type indica o media type quando o recurso não é JSON (ex.: text/html).",
+                    "type": "string"
+                }
+            }
+        },
+        "hateoas.Links": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/definitions/hateoas.Link"
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Informe \"Bearer {token}\" obtido em /api/v1/auth/login.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
